@@ -89,4 +89,56 @@ print(f"Chess games: {df_chess_clean.shape}")
 # Save cleaned data to processed folder
 os.makedirs('data/processed', exist_ok=True)
 
+#Analytical Questions
+#Q10 What is the win rate for White, Black, and Draw? (% of total games)
+win_rates = df_chess['winner'].value_counts(normalize=True) * 100
+for outcome, rate in win_rates.items():
+    print(f"{outcome}: {rate:.2f}%") #White: 49.86%  Black: 45.40%  Draw: 4.74%
+#Q11What is the most common way games end (victory_status)?
+# With percentages
+victory_status_pct = df_chess['victory_status'].value_counts(normalize=True) * 100
+print(victory_status_pct.round(1).astype(str) + '%') #Resign 55.6% Mate 31.5% Out of Time 8.4% Draw  4.5%
+most_common_end = df_chess['victory_status'].value_counts().index[0]
+print(f"Most common: {most_common_end}") # Most common: Resign
+#Q12 Which victory_status has the highest average number of turns?
+# Group by victory_status and calculate mean turns
+avg_turns_by_status = df_chess.groupby('victory_status')['turns'].mean()
 
+# Find which one has the highest average
+highest_avg_status = avg_turns_by_status.idxmax()
+highest_avg_value = avg_turns_by_status.max()
+
+print(f"{highest_avg_status}: {highest_avg_value:.1f} turns") # Draw: 83.8 turns
+#Q 13 Which opening family is most popular when Black wins? Same for White?
+most_popular_2 = df_chess[df_chess['winner'] == 'White']['opening_family'].value_counts().iloc[0:1]
+print(f"most popular family when white wins: {most_popular_2.index[0]} ({most_popular_2.values[0]} games)")
+#most popular family when black wins: Sicilian Defense (1273 games)
+most_popular_2 = df_chess[df_chess['winner'] == 'White']['opening_family'].value_counts().iloc[0:1]
+print(f"most popular family when white wins: {most_popular_2.index[0]} ({most_popular_2.values[0]} games)")
+#most popular family when white wins: Sicilian Defense (1173 games)
+#Q14 Do rated games have a different White win rate than unrated games? 
+# Calculate white win rate for rated games
+rated_games = df_chess[df_chess['rated'] == True]
+rated_white_win = (rated_games['winner'] == 'White').sum() / len(rated_games) * 100
+
+# Calculate white win rate for unrated games
+unrated_games = df_chess[df_chess['rated'] == False]
+unrated_white_win = (unrated_games['winner'] == 'White').sum() / len(unrated_games) * 100
+
+print(f"Rated games: {rated_white_win:.1f}%")
+print(f"Unrated games: {unrated_white_win:.2f}%")
+# Rated games: 49.8%  Unrated games: 49.94%
+# Q15 Classify each game as Short/Medium/Long using apply(). What % is each?
+# Using apply() with a custom function / depends on threshold values
+def classify_game(turns):
+    if turns <= 15:
+        return 'Short'
+    elif turns <= 70:
+        return 'Medium'
+    else:
+        return 'Long'
+
+df_chess['game_length'] = df_chess['turns'].apply(classify_game)
+percentages = df_chess['game_length'].value_counts(normalize=True) * 100
+print(percentages.round(1).astype(str) + '%')
+#Medium    62.2%  Long  32.0%   Short   5.8%
