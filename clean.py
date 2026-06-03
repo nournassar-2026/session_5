@@ -53,13 +53,40 @@ print(f"{df_chess['opening_variation'].isna().mean() * 100:.2f}%") #28.22%
 
 #6-What is the minimum number of turns in any game? Why is this suspicious?
 df_chess['turns'].min() # 1 , it is imposible to complete game in 1 turn
-df_chess['is_suspicious']=df_chess['turns']<5
 
 # Display null values per column for chess
 print("\nNull values per column - Chess Games:")
 print(df_chess.isnull().sum())
+#Parse time_increment
+df_chess[['time_base','time_inc']]=df_chess['time_increment'].str.split('+',expand=True).astype(int)
+#Add rating_diff
+df_chess['rating_diff']=df_chess['white_rating']-df_chess['black_rating']
+print(df_chess[['white_rating', 'black_rating', 'rating_diff']].head(5))
+#Q7: After adding rating_diff, what % of games did the higher-rated player win?
+print(df_chess['winner'].unique()) # categories in winner col
+non_draws = df_chess[df_chess['winner'] != 'Draw']
+higher_wins_non_draws = ((non_draws['rating_diff'] > 0) & (non_draws['winner'] == 'White')) | \
+                         ((non_draws['rating_diff'] < 0) & (non_draws['winner'] == 'Black'))
 
+print(f"Higher-rated wins (excluding draws): {(higher_wins_non_draws.sum() / len(non_draws)) * 100:.1f}%")
+#Higher-rated wins (excluding draws): 64.6%
+#Q8: How many games are flagged as suspicious (< 5 turns)?
+df_chess['is_suspicious']=df_chess['turns']<5 
+df_chess['is_suspicious'].sum() # 342
 
+#Q9: How many unique opening families exist?  
+df_chess['opening_family']=df_chess['opening_fullname'].str.split(':').str[0].str.strip() #227
+#  Drop opening_response because of high nulls
+df_chess=df_chess.drop(columns=['opening_response'])
+#Validate
+assert df_chess['rating_diff'].notna().all()
+assert df_chess.duplicated().sum() == 0
+df_chess_clean =df_chess
 
+print(f"\nCleaned data shapes:")
+print(f"Chess games: {df_chess_clean.shape}")
+
+# Save cleaned data to processed folder
+os.makedirs('data/processed', exist_ok=True)
 
 
