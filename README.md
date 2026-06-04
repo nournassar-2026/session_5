@@ -69,10 +69,11 @@ chess-analysis/
 | `white_rating_vs_turns_rated.png` | Rating vs game length scatter plot |
 
 
-## 🚀 How to Run
+##  How to Run
 
  Install dependencies
 py -m pip install -r requirements.txt
+
 clean.py
 
 # Acknowledgments
